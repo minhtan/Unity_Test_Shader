@@ -1,16 +1,21 @@
-﻿Shader "Custom/2_Lambert" {
+﻿Shader "Custom/3_Specular" {
 	Properties{
 		_Color ("Color", Color) = (1,1,1,1)
+		_SpecColor ("Spec Color", Color) = (1,1,1,1)
+		_Shininess ("Shininess", float) = 10
 	}
 	SubShader{
-		Pass{
 		Tags {"LightMode" = "ForwardBase"}
+		Pass{
 			CGPROGRAM
 			#pragma vertex vert
 			#pragma fragment frag
 
 			//user vars
 			uniform float4 _Color;
+			uniform float4 _SpecColor;
+			uniform float _Shininess;
+			
 
 			//Unity vars
 			uniform float4 _LightColor0;
@@ -26,7 +31,7 @@
 				float3 norm : NORMAL;
 			};
 			struct vertexOutput{
-				float4 pos : SV_POSITION;
+				float4 pos : POSITION;
 				float4 col : COLOR;
 			};
 
@@ -35,12 +40,14 @@
 				vertexOutput o;
 
 				float3 normDir = normalize( mul(float4(v.norm, 0.0), _World2Object).xyz );
+				float3 viewDir = normalize( _WorldSpaceCameraPos.xyz - mul(UNITY_MATRIX_MVP, v.ver).xyz );
 				float3 lightDir = normalize( _WorldSpaceLightPos0.xyz );
 				float atten = 1.0;
 
-				float3 diffuseRefl = atten * _LightColor0.xyz * _Color.rgb * max (0.0 ,dot(normDir, lightDir));
+				float3 diffuseRefl = atten * _LightColor0.xyz * max (0.0 , dot(normDir, lightDir));
+				float3 finalLight = (diffuseRefl + UNITY_LIGHTMODEL_AMBIENT.xyz) * _Color.rgb;
 
-				o.col = float4(diffuseRefl, 1.0);
+				o.col = float4(viewDir, 1.0);
 				o.pos = mul(UNITY_MATRIX_MVP, v.ver);
 
 				return o;
