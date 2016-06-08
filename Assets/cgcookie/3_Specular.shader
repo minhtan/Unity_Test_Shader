@@ -40,14 +40,16 @@
 				vertexOutput o;
 
 				float3 normDir = normalize( mul(float4(v.norm, 0.0), _World2Object).xyz );
-				float3 viewDir = normalize( _WorldSpaceCameraPos.xyz - mul(UNITY_MATRIX_MVP, v.ver).xyz );
+				float3 viewDir = normalize( _WorldSpaceCameraPos.xyz - mul(_Object2World, v.ver).xyz );
 				float3 lightDir = normalize( _WorldSpaceLightPos0.xyz );
 				float atten = 1.0;
 
 				float3 diffuseRefl = atten * _LightColor0.xyz * max (0.0 , dot(normDir, lightDir));
-				float3 finalLight = (diffuseRefl + UNITY_LIGHTMODEL_AMBIENT.xyz) * _Color.rgb;
+				float3 specRefl = atten * _SpecColor.rgb * max (0.0 , dot(normDir, lightDir)) * pow(max(0.0, dot(reflect(-lightDir, normDir), viewDir)), _Shininess);
 
-				o.col = float4(viewDir, 1.0);
+				float3 finalLight = (diffuseRefl + specRefl + UNITY_LIGHTMODEL_AMBIENT.xyz) * _Color.rgb;
+
+				o.col = float4(finalLight, 1.0);
 				o.pos = mul(UNITY_MATRIX_MVP, v.ver);
 
 				return o;
